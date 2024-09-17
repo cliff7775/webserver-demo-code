@@ -1,9 +1,17 @@
 const express = require("express"); //引用 express 模組
+const { engine } = require("express-handlebars"); //引用 express-handlebars 模組
 const path = require("path"); //引用 path 模組
 const fs = require("fs"); //引用fs 模組檔案系統操作，如讀取、寫入檔
-
+const helmet = require("helmet"); //引用頭盔模組,修改 header 中的資訊
+//
 const app = express(); //調用函示呼叫啟用express模組功能
-
+//
+app.engine("handlebars", engine());
+app.set("view engine", "handlebars");
+app.set("views", "./views");
+//
+app.use(helmet());
+app.use("/static", express.static("public"));
 app.use((req, res, next) => {
   const filePath = path.join(__dirname, "log", "userEnterlog.txt");
 
@@ -11,7 +19,7 @@ app.use((req, res, next) => {
   //req.rawHeaders 是一個陣列，保存原始大小寫和順序，並以鍵值對交替排列。
   //req.headers 是一個物件，所有標頭名稱都被轉換為小寫，並且可以通過鍵值對的形式直接查詢標頭。
   const { method, url, ip } = req;
-  const userIp = ip.split(":")[3];
+  const userIp = ip.split(":")[3]; //剔除req物件的ip屬性值中的雜質
   const enterTimeStamp = currentTimeStamp();
   const userInfo = `進站時間戳 : ${enterTimeStamp}, 【方法: ${method} 登入地址: ${userIp} 進入路徑: ${url}】\n`;
   fs.appendFile(filePath, userInfo, (error) => {
@@ -22,34 +30,34 @@ app.use((req, res, next) => {
   next();
 });
 
-// home頁面路由
-app.get("/home", (req, res) => {
-  res.send("Hello! World");
+// root頁面路由
+app.get("/", (req, res) => {
+  res.render("home");
 });
 
 // about頁面路由
 app.get("/about", (req, res) => {
-  res.send("About Page");
+  res.render("about");
 });
 
 // login頁面路由
 app.get("/login", (req, res) => {
-  res.send("logins Page");
+  res.render("login");
 });
 
 // products頁面路由
 app.get("/products", (req, res) => {
-  res.send("products Page");
+  res.render("products");
 });
 
 // admin頁面路由
 app.get("/admin", (req, res) => {
-  res.send("admin Page");
+  res.render("admin");
 });
 
 // 404頁面路由,使用一個通用的路由處理器來處理找不到頁面的情況
 app.use((req, res, next) => {
-  res.status(404).send("404 Not Found");
+  res.status(404).render("notfound");
 });
 
 // error錯誤頁面路由處理
@@ -67,9 +75,10 @@ app.use((err, req, res, next) => {
 });
 
 // 啟動伺服器
-const port = 6060;
+const port = process.env.PORT || 6060;
 app.listen(port, () => {
-  console.log(`http://127.0.0.1:${port}/home`);
+  console.log(`http://127.0.0.1:${port}/`);
+  console.log(`http://cliffweb.zeabur.app/`);
 });
 
 function currentTimeStamp() {

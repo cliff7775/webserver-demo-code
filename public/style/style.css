@@ -1,0 +1,26 @@
+/*全域選擇器*/
+*{
+    box-sizing: border-box;
+}
+
+.wrapper{
+    border:1px solid #000;
+    height:100%;
+    position: relative;
+}
+
+.box{
+
+    /* position 百分比的參考值是上一層元素*/
+    /*元素沒有明確的上一層（例如父元素）考值將會是 整個瀏覽器視窗（即 viewport）*/
+
+    position: absolute;
+    top: 50%;
+    left:50%;
+    transform: translate(-50%,-50%);
+    /* position 搭配 transform 的至中方式*/
+    
+    /*變形屬性  百分比的參考值是自己
+    transform: translate(100px,100px) scale(2);
+    */
+}
