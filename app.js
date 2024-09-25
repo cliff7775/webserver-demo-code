@@ -5,12 +5,57 @@ const fs = require("fs"); //引用fs 模組檔案系統操作，如讀取、寫�
 const helmet = require("helmet"); //引用頭盔模組,修改 header 中的資訊
 //
 const app = express(); //調用函示呼叫啟用express模組功能
+const crypto = require("crypto");
 //
 app.engine("handlebars", engine());
 app.set("view engine", "handlebars");
 app.set("views", "./views");
 //
-app.use(helmet());
+app.use((req, res, next) => {
+  res.locals.nonce = crypto.randomBytes(16).toString("hex");
+  next();
+});
+//
+// 使用 helmet 中間件，自定義 Content-Security-Policy 標頭
+app.use(
+  helmet({
+    xXssProtection: false,
+    contentSecurityPolicy: {
+      directives: {
+        // 允許從自己網站和指定的外部來源加載腳本
+        "script-src": [
+          "'self'",
+          "'nonce-2726c7f26c'", // 動態設置 nonce
+          "https://www.google-analytics.com",
+          "https://www.googletagmanager.com",
+          "https://www.google.com.tw",
+          "https://chromestatus.com",
+        ],
+        // 根據需要可以添加其他資源的來源設置
+        "style-src": ["'self'", "https://fonts.googleapis.com"], // 例子：允許從 Google Fonts 加載樣式
+        "img-src": [
+          "'self'",
+          "data:",
+          "https://www.google.com.tw",
+          "https://www.example.com",
+        ], // 例子：允許從外部來源加載圖片
+        "connect-src": [
+          "'self'",
+          "https://analytics.google.com",
+          "https://www.google-analytics.com",
+          "https://www.google.com.tw",
+        ],
+        "frame-src": ["'self'", "https://td.doubleclick.net"],
+      },
+    },
+  })
+);
+//
+app.use((req, res, next) => {
+  res.setHeader("X-Xss-Protection", "1");
+  next();
+});
+//
 app.use("/static", express.static("public"));
 app.use((req, res, next) => {
   const filePath = path.join(__dirname, "log", "userEnterlog.txt");
@@ -32,7 +77,7 @@ app.use((req, res, next) => {
 
 // root頁面路由
 app.get("/", (req, res) => {
-  res.render("home");
+  res.render("home", { nonce: res.locals.nonce });
 });
 
 // about頁面路由
